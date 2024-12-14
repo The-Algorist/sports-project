@@ -28,13 +28,15 @@ jobs:
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
+      env:
+        DOCKER_REPO: ${{ secrets.DOCKERHUB_USERNAME }}/zoezee-backend
       with:
         context: ./backend
         file: ./backend/Dockerfile
         push: true
         tags: |
-          ${{ secrets.DOCKERHUB_USERNAME }}/zoezee-backend:latest
-          ${{ secrets.DOCKERHUB_USERNAME }}/zoezee-backend:${{ github.sha }}
+          ${{ env.DOCKER_REPO }}:latest
+          ${{ env.DOCKER_REPO }}:${{ github.sha }}
 
     - name: Deploy to server
       uses: appleboy/ssh-action@v0.1.4
