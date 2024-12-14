@@ -5,24 +5,45 @@ services:
     image: postgres:16.3-alpine
     restart: always
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: pass
-      POSTGRES_DB: demo
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pass}
+      POSTGRES_DB: ${POSTGRES_DB:-demo}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - app-network
 
   backend:
-    image: ${DOCKERHUB_USERNAME}/zoezee-backend:${IMAGE_TAG:-latest}
+    image: mysteryalgorist/zoezee-backend:latest
     depends_on:
       - db
     environment:
-      DATABASE_URL: postgresql://admin:pass@db:5432/demo
-      PORT: 3001
+      PORT: ${PORT:-3001}
+      NODE_ENV: ${NODE_ENV:-development}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-pass}@db:5432/${POSTGRES_DB:-demo}
+      JWT_SECRET: ${JWT_SECRET}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      WEBSOCKET_URL: ${WEBSOCKET_URL}
+      KEYCLOAK_HOST: ${KEYCLOAK_HOST}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID}
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
     ports:
       - "3001:3001"
+    networks:
+      - app-network
+    volumes:
+      - uploads:/app/uploads
     restart: always
 
 volumes:
   postgres_data:
+  uploads:
+
+networks:
+  app-network:
+    driver: bridge
