@@ -2,6 +2,11 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Install dependencies required for Prisma
+RUN apk add --no-cache \
+    openssl \
+    libc6-compat
+
 # Install pnpm
 RUN npm install -g pnpm
 
