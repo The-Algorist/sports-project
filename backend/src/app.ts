@@ -9,7 +9,7 @@ import sportRoutes from './routes/sportRoutes';
 import fixtureRoutes from './routes/fixtureRoutes';
 import resultRoutes from './routes/resultRoutes';
 import userRoutes from './routes/userRoutes';
-
+// TODO: Add error handling
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
