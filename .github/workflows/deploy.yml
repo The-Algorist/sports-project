@@ -42,7 +42,9 @@ jobs:
         context: ./backend
         file: ./backend/Dockerfile
         push: true
-        tags: "${{ secrets.DOCKERHUB_USERNAME }}/zoezee-backend:latest,${{ secrets.DOCKERHUB_USERNAME }}/zoezee-backend:${{ github.sha }}"
+        tags: |
+          mysteryalgorist/zoezee-backend:latest
+          mysteryalgorist/zoezee-backend:${{ github.sha }}
 
     - name: Deploy to server
       uses: appleboy/ssh-action@v0.1.4
