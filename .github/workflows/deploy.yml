@@ -9,6 +9,7 @@ on:
     branches: [ main ]
     paths:
       - 'backend/**'
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -45,6 +46,12 @@ jobs:
         tags: |
           mysteryalgorist/zoezee-backend:latest
           mysteryalgorist/zoezee-backend:${{ github.sha }}
+
+    - name: Setup SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
 
     - name: Deploy to server
       uses: appleboy/ssh-action@v0.1.4
