@@ -1,5 +1,4 @@
 # Project Setup Instructions
-// 
 ## Prerequisites
 - Ensure you have Docker and Docker Compose installed on your machine.
 - Node.js and npm should also be installed.
