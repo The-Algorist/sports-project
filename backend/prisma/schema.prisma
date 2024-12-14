@@ -1,0 +1,94 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model University {
+  id        String    @id @default(uuid())
+  name      String
+  location  String
+  imageUrl  String?
+  sports    Sport[]
+  users     User[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Sport {
+  id          String    @id @default(uuid())
+  name        String
+  university  University @relation(fields: [universityId], references: [id])
+  universityId String
+  fixtures    Fixture[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Fixture {
+  id          String    @id @default(uuid())
+  sport       Sport     @relation(fields: [sportId], references: [id])
+  sportId     String
+  homeTeam    String
+  awayTeam    String
+  date        DateTime
+  venue       String
+  gender      Gender
+  result      Result?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Result {
+  id            String    @id @default(uuid())
+  fixture       Fixture   @relation(fields: [fixtureId], references: [id])
+  fixtureId     String    @unique
+  homeScore     Int
+  awayScore     Int
+  homeScorers   String[]
+  awayScorers   String[]
+  status        GameStatus @default(IN_PROGRESS)
+  currentPeriod String?
+  timeElapsed   Int?
+  imageUrl      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model User {
+  id           String     @id @default(uuid())
+  name         String
+  email        String     @unique
+  password     String
+  role         Role       @default(STUDENT)
+  gender       Gender
+  university   University? @relation(fields: [universityId], references: [id])
+  universityId String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+enum Role {
+  ADMIN
+  COACH
+  STUDENT
+  STAFF
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum GameStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  FINISHED
+  POSTPONED
+  CANCELLED
+}
+
