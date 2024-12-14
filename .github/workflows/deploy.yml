@@ -13,7 +13,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
     - uses: actions/checkout@v3
 
@@ -26,11 +26,15 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Display Docker Image Name
+    - name: Debug Docker tags
       run: |
-        echo "Docker images will be tagged as:"
-        echo "${{ secrets.DOCKERHUB_USERNAME }}/zoezee-backend:latest"
-        echo "${{ secrets.DOCKERHUB_USERNAME }}/zoezee-backend:${{ github.sha }}"
+        if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
+          echo "DOCKERHUB_USERNAME is empty"
+          exit 1
+        else
+          echo "DOCKERHUB_USERNAME is set"
+          echo "Will build for: ${{ secrets.DOCKERHUB_USERNAME }}/zoezee-backend"
+        fi
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
@@ -38,9 +42,7 @@ jobs:
         context: ./backend
         file: ./backend/Dockerfile
         push: true
-        tags: |
-          ${{ secrets.DOCKERHUB_USERNAME }}/zoezee-backend:latest,
-          ${{ secrets.DOCKERHUB_USERNAME }}/zoezee-backend:${{ github.sha }}
+        tags: "${{ secrets.DOCKERHUB_USERNAME }}/zoezee-backend:latest,${{ secrets.DOCKERHUB_USERNAME }}/zoezee-backend:${{ github.sha }}"
 
     - name: Deploy to server
       uses: appleboy/ssh-action@v0.1.4
