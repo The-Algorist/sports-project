@@ -1,3 +1,4 @@
+version: '3.8'
 
 services:
   db:
@@ -9,6 +10,19 @@ services:
       POSTGRES_DB: demo
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    image: ${DOCKERHUB_USERNAME}/zoezee-backend:${IMAGE_TAG:-latest}
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://admin:pass@db:5432/demo
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    restart: always
 
 volumes:
   postgres_data:
