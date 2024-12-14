@@ -8,44 +8,45 @@ generator client {
 }
 
 model University {
-  id        String    @id @default(uuid())
+  id        String   @id @default(uuid())
   name      String
   location  String
   imageUrl  String?
   sports    Sport[]
   users     User[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Sport {
-  id          String    @id @default(uuid())
-  name        String
-  university  University @relation(fields: [universityId], references: [id])
-  universityId String
-  fixtures    Fixture[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id           String      @id @default(uuid())
+  name         String
+  university   University? @relation(fields: [universityId], references: [id])
+  universityId String?
+  type         SportType   @default(INDIVIDUAL)
+  fixtures     Fixture[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 }
 
 model Fixture {
-  id          String    @id @default(uuid())
-  sport       Sport     @relation(fields: [sportId], references: [id])
-  sportId     String
-  homeTeam    String
-  awayTeam    String
-  date        DateTime
-  venue       String
-  gender      Gender
-  result      Result?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        String   @id @default(uuid())
+  sport     Sport    @relation(fields: [sportId], references: [id])
+  sportId   String
+  homeTeam  String
+  awayTeam  String
+  date      DateTime
+  venue     String
+  gender    Gender
+  result    Result?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Result {
-  id            String    @id @default(uuid())
-  fixture       Fixture   @relation(fields: [fixtureId], references: [id])
-  fixtureId     String    @unique
+  id            String     @id @default(uuid())
+  fixture       Fixture    @relation(fields: [fixtureId], references: [id])
+  fixtureId     String     @unique
   homeScore     Int
   awayScore     Int
   homeScorers   String[]
@@ -54,21 +55,21 @@ model Result {
   currentPeriod String?
   timeElapsed   Int?
   imageUrl      String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 }
 
 model User {
-  id           String     @id @default(uuid())
+  id           String      @id @default(uuid())
   name         String
-  email        String     @unique
+  email        String      @unique
   password     String
-  role         Role       @default(STUDENT)
+  role         Role        @default(STUDENT)
   gender       Gender
   university   University? @relation(fields: [universityId], references: [id])
   universityId String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 }
 
 enum Role {
@@ -92,3 +93,8 @@ enum GameStatus {
   CANCELLED
 }
 
+enum SportType {
+  INDIVIDUAL
+  TEAM
+  OTHER
+}

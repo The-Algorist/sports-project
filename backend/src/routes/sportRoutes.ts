@@ -15,15 +15,25 @@ const router = express.Router();
  *         name: page
  *         schema:
  *           type: integer
- *         description: Page number
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number for pagination
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
  *         description: Number of items per page
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Filter sports by name (case-insensitive)
  *     responses:
  *       200:
- *         description: A list of sports
+ *         description: A paginated list of sports
  *         content:
  *           application/json:
  *             schema:
@@ -35,10 +45,22 @@ const router = express.Router();
  *                     $ref: '#/components/schemas/Sport'
  *                 total:
  *                   type: integer
+ *                   description: Total number of sports matching the query
  *                 page:
  *                   type: integer
+ *                   description: Current page number
  *                 limit:
  *                   type: integer
+ *                   description: Number of items per page
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.get('/', async (req, res) => {
   try {
@@ -48,7 +70,7 @@ router.get('/', async (req, res) => {
     const [sports, total] = await Promise.all([
       prisma.sport.findMany({
         ...queryOptions,
-        include: { university: true },
+        include: { fixtures: true },
       }),
       prisma.sport.count({ where: queryOptions.where }),
     ]);
@@ -76,25 +98,39 @@ router.get('/', async (req, res) => {
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - type
  *             properties:
  *               name:
  *                 type: string
- *               universityId:
+ *                 description: Name of the sport
+ *               type:
  *                 type: string
+ *                 description: Type of the sport
  *     responses:
  *       201:
- *         description: Created sport
+ *         description: Sport created successfully
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Sport'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.post('/', async (req, res) => {
   try {
-    const { name, universityId } = req.body;
+    const { name, type } = req.body;
     const sport = await prisma.sport.create({
-      data: { name, universityId },
-      include: { university: true },
+      data: { name, type },
+      include: { fixtures: true },
     });
     res.status(201).json(sport);
   } catch (error) {
@@ -114,22 +150,39 @@ router.post('/', async (req, res) => {
  *         required: true
  *         schema:
  *           type: string
+ *         description: Sport ID
  *     responses:
  *       200:
- *         description: Sport details
+ *         description: Sport details with related fixtures and university
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Sport'
  *       404:
  *         description: Sport not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.get('/:id', async (req, res): Promise<any> => {
   try {
     const { id } = req.params;
     const sport = await prisma.sport.findUnique({
       where: { id },
-      include: { university: true, fixtures: true },
+      include: { fixtures: true, university: true },
     });
     if (!sport) {
       return res.status(404).json({ error: 'Sport not found' });
@@ -152,6 +205,7 @@ router.get('/:id', async (req, res): Promise<any> => {
  *         required: true
  *         schema:
  *           type: string
+ *         description: Sport ID
  *     requestBody:
  *       required: true
  *       content:
@@ -161,26 +215,44 @@ router.get('/:id', async (req, res): Promise<any> => {
  *             properties:
  *               name:
  *                 type: string
- *               universityId:
+ *                 description: Updated name of the sport
+ *               type:
  *                 type: string
+ *                 description: Updated type of the sport
  *     responses:
  *       200:
- *         description: Updated sport
+ *         description: Sport updated successfully
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Sport'
  *       404:
  *         description: Sport not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, universityId } = req.body;
+    const { name, type } = req.body;
     const sport = await prisma.sport.update({
       where: { id },
-      data: { name, universityId },
-      include: { university: true },
+      data: { name, type },
+      include: { university: true, fixtures: true  },
     });
     res.json(sport);
   } catch (error) {
@@ -200,11 +272,28 @@ router.put('/:id', async (req, res) => {
  *         required: true
  *         schema:
  *           type: string
+ *         description: Sport ID
  *     responses:
  *       204:
  *         description: Sport deleted successfully
  *       404:
  *         description: Sport not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.delete('/:id', async (req, res) => {
   try {
@@ -222,26 +311,36 @@ router.delete('/:id', async (req, res) => {
  *   schemas:
  *     Sport:
  *       type: object
+ *       required:
+ *         - id
+ *         - name
+ *         - type
  *       properties:
  *         id:
  *           type: string
+ *           description: Unique identifier for the sport
  *         name:
  *           type: string
- *         universityId:
+ *           description: Name of the sport
+ *         type:
  *           type: string
+ *           description: Type of the sport
  *         createdAt:
  *           type: string
  *           format: date-time
+ *           description: Timestamp when the sport was created
  *         updatedAt:
  *           type: string
  *           format: date-time
- *         university:
- *           $ref: '#/components/schemas/University'
+ *           description: Timestamp when the sport was last updated
  *         fixtures:
  *           type: array
  *           items:
  *             $ref: '#/components/schemas/Fixture'
+ *           description: List of fixtures associated with this sport
+ *         university:
+ *           $ref: '#/components/schemas/University'
+ *           description: University associated with this sport
  */
 
 export default router;
-
